@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KINETIC — Motion &amp; Web Experience Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0b0b0c; --panel: #151517; --line: #2a2a2d; 
+    --text: #f2f2ef; --muted: #8a8a8e; --accent: #c6ff3d;
+    --font-display: 'Archivo', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: auto; }
+  body {
+    background:var(--bg); color:var(--text); font-family:var(--font-body);
+    overflow-x:hidden; -webkit-font-smoothing:antialiased; cursor: none;
+  }
+  ::selection { background:var(--accent); color:#0b0b0c; }
+  a, button { cursor: none; color:inherit; text-decoration:none; }
+  button { font-family:inherit; border:none; background:none; }
+  img { max-width:100%; display:block; }
+
+  /* CURSOR */
+  .cursor-dot { position: fixed; top: 0; left: 0; width: 12px; height: 12px; background: var(--accent); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); mix-blend-mode: difference; transition: width 0.3s, height 0.3s; }
+  .cursor-outline { position: fixed; top: 0; left: 0; width: 40px; height: 40px; border: 1px solid rgba(198,255,61, 0.5); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%, -50%); transition: width 0.3s, height 0.3s, border-color 0.3s, background 0.3s; }
+
+  .wrap { max-width:1280px; margin:0 auto; padding:0 32px; }
+  h1,h2,h3 { font-family:var(--font-display); font-weight:900; line-height:0.98; letter-spacing:-0.02em; }
+  .mono { font-family:var(--font-mono); font-size:12px; letter-spacing:0.02em; color:var(--muted); }
+
+  /* NAV */
+  .nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:24px 32px; opacity:0; mix-blend-mode: difference; }
+  .nav-logo { font-family:var(--font-display); font-weight:900; font-size:20px; display:flex; align-items:center; gap:8px; }
+  .nav-logo .dot { width:8px; height:8px; border-radius:50%; background:var(--accent); display:inline-block; }
+  .nav-links { display:flex; gap:36px; align-items:center; }
+  .nav-links a { font-size:14px; color:var(--muted); transition:color 0.25s; font-weight: 500;}
+  .nav-links a:hover { color:var(--text); }
+  .nav-cta { color:var(--bg) !important; background:var(--accent); padding:11px 22px; border-radius:100px; font-weight:600; transition:transform 0.3s, box-shadow 0.3s; }
+  .nav-cta:hover { transform:scale(1.05); box-shadow: 0 0 20px rgba(198,255,61,0.4); }
+
+  /* HERO */
+  .hero { position:relative; min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:140px 32px 100px; overflow:hidden; }
+  .hero-blob { position:absolute; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle at 30% 30%, rgba(198,255,61,0.16), transparent 70%); top:-100px; right:-150px; filter:blur(10px); z-index:0; pointer-events:none; }
+  .hero-eyebrow { display:flex; align-items:center; gap:10px; margin-bottom:28px; opacity: 0; }
+  .hero-title { font-size:clamp(48px, 8.4vw, 128px); max-width:1180px; position:relative; z-index:1; }
+  .hero-title .line { overflow:hidden; display:block; }
+  .hero-title .line span { display:inline-block; transform: translateY(120%); }
+  .hero-title .accent-word { color:var(--accent); font-style:italic; }
+  .hero-sub { margin-top:36px; max-width:480px; font-size:17px; line-height:1.6; color:var(--muted); position:relative; z-index:1; opacity:0; }
+  .hero-actions { margin-top:44px; display:flex; align-items:center; gap:24px; position:relative; z-index:1; opacity:0; }
+  
+  .btn-primary { background:var(--accent); color:var(--bg); padding:16px 30px; border-radius:100px; font-weight:700; font-size:15px; display:inline-flex; align-items:center; gap:10px; transition:transform 0.35s, gap 0.3s, box-shadow 0.3s; }
+  .btn-primary:hover { transform:scale(1.04); gap:16px; box-shadow: 0 0 20px rgba(198,255,61,0.3); }
+  .btn-secondary { display:flex; align-items:center; gap:10px; font-size:15px; font-weight: 500; }
+  .play-circle { width:50px; height:50px; border-radius:50%; border:1px solid var(--line); display:flex; align-items:center; justify-content:center; transition:0.3s; }
+  .btn-secondary:hover .play-circle { border-color:var(--accent); background:rgba(198,255,61,0.08); transform: scale(1.1); }
+
+  .scroll-cue { position:absolute; bottom:40px; left:32px; display:flex; align-items:center; gap:10px; opacity:0; }
+  .scroll-cue-line { width:1px; height:40px; background:var(--line); position:relative; overflow:hidden; }
+  .scroll-cue-line::after { content:''; position:absolute; top:-40px; left:0; width:100%; height:40px; background:var(--accent); animation:scrollDrip 2s infinite; }
+  @keyframes scrollDrip { 0% { transform:translateY(0); } 100% { transform:translateY(80px); } }
+
+  /* MARQUEE */
+  .marquee-section { border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:28px 0; overflow:hidden; white-space:nowrap; background: #0e0e0f; }
+  .marquee-track { display:inline-flex; gap:64px; }
+  .marquee-track span { font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--muted); display:inline-flex; align-items:center; gap:64px; }
+  .marquee-track span em { font-style:normal; color:var(--line); }
+
+  /* SERVICES */
+  .section { padding:140px 32px; position:relative; }
+  .section-head { display:flex; justify-content:space-between; align-items:flex-end; gap:40px; margin-bottom:72px; flex-wrap:wrap; }
+  .section-index { display:block; color:var(--accent); margin-bottom:18px; }
+  .section-title { font-size:clamp(34px, 4.4vw, 56px); max-width:640px; }
+  .section-desc { max-width:340px; color:var(--muted); font-size:15px; line-height:1.6; }
+  .services-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
+  .service-card { background:var(--bg); padding:44px 36px; opacity:0; transform:translateY(40px); transition: background 0.4s; }
+  .service-card:hover { background: #111113; }
+  .service-num { display:block; margin-bottom:56px; transition: color 0.3s; }
+  .service-card:hover .service-num { color: var(--accent); }
+  .service-card h3 { font-size:24px; margin-bottom:14px; }
+  .service-card p { color:var(--muted); font-size:14.5px; line-height:1.65; max-width:280px; }
+
+  /* WORK PIN */
+  .work-pin { height:100vh; display:flex; align-items:center; overflow:hidden; position:relative; }
+  .work-heading { position:absolute; top:80px; left:32px; z-index:5; }
+  .work-track { display:flex; gap:32px; padding-left:32px; }
+  .work-card { flex:0 0 auto; width:min(70vw, 640px); height:60vh; border-radius:8px; position:relative; overflow:hidden; background:var(--panel); border:1px solid var(--line); cursor:none; }
+  .work-card-img { position:absolute; inset:0; background-size:cover; background-position:center; transform:scale(1.05); transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+  .work-card:hover .work-card-img { transform:scale(1); }
+  .work-card-overlay { position:absolute; inset:0; background:linear-gradient(180deg, rgba(11,11,12,0) 40%, rgba(11,11,12,0.95) 100%); opacity: 0.8; transition:0.5s; }
+  .work-card:hover .work-card-overlay { opacity: 1; }
+  .work-card-info { position:absolute; bottom:0; left:0; right:0; padding:32px; display:flex; justify-content:space-between; align-items:flex-end; transform: translateY(10px); transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+  .work-card:hover .work-card-info { transform: translateY(0); }
+  .work-card-info h4 { font-family:var(--font-display); font-size:28px; }
+  .work-card-info span { font-size:13px; color:var(--accent); background: rgba(198,255,61,0.1); padding: 6px 12px; border-radius: 100px; }
+
+  /* STATS */
+  .stats-section { border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:100px 32px; background: #0e0e0f; }
+  .stats-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:32px; }
+  .stat-num { font-family:var(--font-display); font-weight:900; font-size:clamp(40px, 4.6vw, 68px); color:var(--accent); line-height:1; }
+  .stat-label { margin-top:14px; color:var(--muted); font-size:15px; font-weight: 500;}
+
+  /* TESTIMONIAL */
+  .testimonial-section { padding:160px 32px; display:flex; justify-content:center; text-align:center; }
+  .testimonial-quote { max-width:900px; font-size:clamp(26px, 3.6vw, 44px); font-weight:500; line-height:1.3; opacity:0; transform:translateY(30px); }
+  .testimonial-quote .hl { color:var(--accent); }
+  .testimonial-author { margin-top:40px; display:flex; flex-direction:column; gap:6px; }
+
+  /* CTA */
+  .cta-section { padding:60px 32px 160px; }
+  .cta-box { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:100px 60px; text-align:center; position:relative; overflow:hidden; opacity:0; transform:scale(0.97); }
+  .cta-box::before { content:''; position:absolute; width:600px; height:600px; background:radial-gradient(circle, rgba(198,255,61,0.15), transparent 70%); top:-200px; left:50%; transform:translateX(-50%); pointer-events:none; }
+  .cta-title { font-size:clamp(32px, 5vw, 64px); max-width:760px; margin:0 auto 40px; position:relative; }
+
+  /* FOOTER */
+  footer { border-top:1px solid var(--line); padding:80px 32px 40px; background: #09090a; }
+  .footer-top { display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:40px; padding-bottom:64px; }
+  .footer-brand h3 { font-size:26px; margin-bottom:16px; display: flex; align-items: center; gap: 8px; }
+  .footer-brand h3 .dot { width: 10px; height: 10px; background: var(--accent); border-radius: 50%; }
+  .footer-brand p { color:var(--muted); font-size:15px; max-width:300px; line-height:1.6; }
+  .footer-col h5 { margin-bottom:24px; }
+  .footer-col a { display:block; font-size:15px; margin-bottom:16px; opacity:0.85; transition:0.25s; }
+  .footer-col a:hover { opacity:1; transform:translateX(5px); color:var(--accent); }
+  .footer-bottom { border-top:1px solid var(--line); padding-top:32px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+
+  @media (max-width: 900px){
+    .services-grid { grid-template-columns:1fr; }
+    .stats-grid { grid-template-columns:repeat(2, 1fr); }
+    .footer-top { grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width: 640px){
+    .nav-links { display:none; }
+    .hero { padding-top:120px; }
+    .stats-grid { grid-template-columns:1fr 1fr; gap:36px 20px; }
+    .footer-top { grid-template-columns:1fr; }
+    .work-card { width:85vw; height:50vh; }
+    body { cursor: auto; }
+    .cursor-dot, .cursor-outline { display: none; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Custom Cursor -->
+  <div class="cursor-dot" id="cursor-dot"></div>
+  <div class="cursor-outline" id="cursor-outline"></div>
+
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="nav-logo"><span class="dot"></span>KINETIC</div>
+    <div class="nav-links">
+      <a href="#work">Work</a>
+      <a href="#services">Services</a>
+      <a href="#studio">Studio</a>
+      <a href="#contact" class="nav-cta">Start a project</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero" id="hero">
+    <div class="hero-blob" id="hero-blob"></div>
+    <div class="hero-eyebrow" id="hero-eyebrow">
+      <span class="mono">EST. 2019 — MOTION &amp; WEB EXPERIENCE STUDIO</span>
+    </div>
+    <h1 class="hero-title">
+      <span class="line"><span class="hero-text-line">We animate</span></span>
+      <span class="line"><span class="hero-text-line">the <em class="accent-word">interfaces</em></span></span>
+      <span class="line"><span class="hero-text-line">people remember.</span></span>
+    </h1>
+    <p class="hero-sub" id="hero-sub">
+      KINETIC is a nine-person studio building scroll-driven sites, product launch experiences, and interface animation systems for teams who care about the details most people scroll straight past.
+    </p>
+    <div class="hero-actions" id="hero-actions">
+      <a href="#work" class="btn-primary">See our work 
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </a>
+      <a href="#reel" class="btn-secondary">
+        <span class="play-circle">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </span> Watch the reel
+      </a>
+    </div>
+    <div class="scroll-cue" id="scroll-cue">
+      <div class="scroll-cue-line"></div>
+      <span class="mono">SCROLL</span>
+    </div>
+  </section>
+
+  <!-- Marquee -->
+  <div class="marquee-section">
+    <div class="marquee-track" id="marquee-track">
+      <span>INTERACTION DESIGN<em>✦</em>SCROLLTRIGGER SYSTEMS<em>✦</em>LAUNCH SITES<em>✦</em>MOTION SYSTEMS<em>✦</em>3D & WEBGL<em>✦</em>BRAND FILM<em>✦</em></span>
+      <span>INTERACTION DESIGN<em>✦</em>SCROLLTRIGGER SYSTEMS<em>✦</em>LAUNCH SITES<em>✦</em>MOTION SYSTEMS<em>✦</em>3D & WEBGL<em>✦</em>BRAND FILM<em>✦</em></span>
+    </div>
+  </div>
+
+  <!-- Services -->
+  <section class="section" id="services">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <span class="section-index mono">/ 02 — SERVICES</span>
+          <h2 class="section-title">Everything a modern product site needs to move well.</h2>
+        </div>
+        <p class="section-desc">From first scroll to final CTA, every service below feeds the same motion system.</p>
+      </div>
+      <div class="services-grid">
+        <div class="service-card"><span class="service-num mono">01</span><h3>Web Experiences</h3><p>Scroll-driven marketing sites and product pages built on GSAP and ScrollTrigger, tuned frame by frame.</p></div>
+        <div class="service-card"><span class="service-num mono">02</span><h3>Motion Systems</h3><p>Reusable animation tokens and component libraries so your product team can ship motion consistently.</p></div>
+        <div class="service-card"><span class="service-num mono">03</span><h3>Launch Films</h3><p>Short-form product reveal films and in-browser 3D moments for announcements that need to land.</p></div>
+        <div class="service-card"><span class="service-num mono">04</span><h3>Interface Animation</h3><p>Micro-interactions, state transitions, and loading choreography for apps and dashboards.</p></div>
+        <div class="service-card"><span class="service-num mono">05</span><h3>Prototyping</h3><p>Fast, code-based prototypes to test a motion idea before it goes to engineering.</p></div>
+        <div class="service-card"><span class="service-num mono">06</span><h3>Design Systems</h3><p>Motion guidelines documented alongside your visual design system, not bolted on after.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Work (Horizontal Scroll) -->
+  <section class="work-pin" id="work">
+    <div class="work-heading">
+      <span class="section-index mono">/ 03 — SELECTED WORK</span>
+      <h2 class="section-title" style="font-size:clamp(28px,4vw,46px)">Recent launches</h2>
+    </div>
+    <div class="work-track" id="work-track">
+      <div class="work-card">
+        <div class="work-card-img" style="background-image: url('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1200&auto=format&fit=crop')"></div>
+        <div class="work-card-overlay"></div>
+        <div class="work-card-info"><h4>Northwind Audio</h4><span class="mono">PRODUCT LAUNCH</span></div>
+      </div>
+      <div class="work-card">
+        <div class="work-card-img" style="background-image: url('https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1200&auto=format&fit=crop')"></div>
+        <div class="work-card-overlay"></div>
+        <div class="work-card-info"><h4>Halyard Finance</h4><span class="mono">WEB PLATFORM</span></div>
+      </div>
+      <div class="work-card">
+        <div class="work-card-img" style="background-image: url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=1200&auto=format&fit=crop')"></div>
+        <div class="work-card-overlay"></div>
+        <div class="work-card-info"><h4>Fernweh Travel</h4><span class="mono">BRAND SITE</span></div>
+      </div>
+      <div class="work-card">
+        <div class="work-card-img" style="background-image: url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=1200&auto=format&fit=crop')"></div>
+        <div class="work-card-overlay"></div>
+        <div class="work-card-info"><h4>Orbit Health</h4><span class="mono">DASHBOARD</span></div>
+      </div>
+      <div class="work-card" style="display:flex; align-items:center; justify-content:center; background:var(--panel); border:1px dashed var(--muted);">
+        <a href="#contact" class="btn-primary">View all work 
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats-section">
+    <div class="wrap stats-grid">
+      <div class="stat"><div class="stat-num" data-val="120">0</div><div class="stat-label">Sites shipped</div></div>
+      <div class="stat"><div class="stat-num" data-val="9">0</div><div class="stat-label">Studio members</div></div>
+      <div class="stat"><div class="stat-num" data-val="98">0</div><div class="stat-label">Client retention (%)</div></div>
+      <div class="stat"><div class="stat-num" data-val="6">0</div><div class="stat-label">In business (yrs)</div></div>
+    </div>
+  </section>
+
+  <!-- Testimonial -->
+  <section class="testimonial-section" id="studio">
+    <div>
+      <p class="testimonial-quote" id="test-quote">
+        "KINETIC rebuilt our launch page in three weeks and it <span class="hl">outperformed</span> every static version we'd shipped in the two years before it."
+      </p>
+      <div class="testimonial-author">
+        <strong>Priya Nathan</strong><span>VP Marketing, Northwind Audio</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" id="contact">
+    <div class="wrap">
+      <div class="cta-box" id="cta-box">
+        <span class="section-index mono">/ LET'S TALK</span>
+        <h2 class="cta-title">Have a launch coming up? Let's give it some motion.</h2>
+        <a href="#" class="btn-primary">Book a call 
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="wrap">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <h3><span class="dot"></span>KINETIC</h3>
+          <p>A nine-person motion and web experience studio, working with product and marketing teams worldwide.</p>
+        </div>
+        <div class="footer-col mono">
+          <h5>STUDIO</h5>
+          <a href="#work">Work</a><a href="#services">Services</a><a href="#studio">About</a><a href="#contact">Contact</a>
+        </div>
+        <div class="footer-col mono">
+          <h5>CONNECT</h5>
+          <a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">Dribbble</a><a href="#">Twitter / X</a>
+        </div>
+        <div class="footer-col mono">
+          <h5>ADDRESS</h5>
+          <a href="#">142 Rowntree Ave</a><a href="#">Toronto, ON</a><a href="#">hello@kinetic.studio</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span class="mono">© 2026 KINETIC STUDIO. ALL RIGHTS RESERVED.</span>
+        <span class="mono">BUILT WITH VANILLA JS + GSAP</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    // 1. Lenis Smooth Scroll
+    const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+    function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+    requestAnimationFrame(raf);
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time)=>{ lenis.raf(time * 1000) });
+    gsap.ticker.lagSmoothing(0);
+
+    // 2. Custom Cursor
+    const dot = document.getElementById('cursor-dot');
+    const outline = document.getElementById('cursor-outline');
+    window.addEventListener('mousemove', (e) => {
+      gsap.to(dot, { x: e.clientX, y: e.clientY, duration: 0.05 });
+      gsap.to(outline, { x: e.clientX, y: e.clientY, duration: 0.15, ease: 'power2.out' });
+    });
+    document.querySelectorAll('a, button, .work-card').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        gsap.to(dot, { scale: 0.5, duration: 0.2 });
+        gsap.to(outline, { scale: 1.5, borderColor: '#c6ff3d', backgroundColor: 'rgba(198,255,61,0.1)', duration: 0.2 });
+      });
+      el.addEventListener('mouseleave', () => {
+        gsap.to(dot, { scale: 1, duration: 0.2 });
+        gsap.to(outline, { scale: 1, borderColor: 'rgba(198,255,61,0.5)', backgroundColor: 'transparent', duration: 0.2 });
+      });
+    });
+
+    // 3. Initial Hero Animations
+    const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
+    tl.to('#nav', { opacity: 1, duration: 1 }, 1.1)
+      .to('#hero-eyebrow', { opacity: 1, duration: 0.6 }, 0.1)
+      .to('.hero-text-line', { y: 0, duration: 1.1, stagger: 0.1 }, 0.25)
+      .to('#hero-sub', { opacity: 1, y: 0, duration: 0.8 }, 0.9)
+      .to('#hero-actions', { opacity: 1, y: 0, duration: 0.8 }, 1.05)
+      .to('#scroll-cue', { opacity: 1, duration: 0.6 }, 1.3);
+
+    // Blob mouse movement
+    const blob = document.getElementById('hero-blob');
+    window.addEventListener('mousemove', (e) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 60;
+      const y = (e.clientY / window.innerHeight - 0.5) * 60;
+      gsap.to(blob, { x, y, duration: 1.2, ease: 'power2.out' });
+    });
+
+    // 4. Marquee Loop
+    const track = document.getElementById('marquee-track');
+    gsap.to(track, { x: -(track.scrollWidth / 2), duration: 26, ease: 'none', repeat: -1 });
+
+    // 5. Scroll Animations
+    // Services
+    gsap.to('.service-card', {
+      opacity: 1, y: 0, duration: 0.7, stagger: 0.08, ease: 'power3.out',
+      scrollTrigger: { trigger: '.services-grid', start: 'top 80%' }
+    });
+
+    // Work Pin (Horizontal Scroll)
+    const workTrack = document.getElementById('work-track');
+    const scrollAmount = () => workTrack.scrollWidth - window.innerWidth + 64;
+    ScrollTrigger.create({
+      trigger: '#work', start: 'top top', end: () => '+=' + scrollAmount(),
+      pin: true, scrub: 1,
+      animation: gsap.to(workTrack, { x: () => -scrollAmount(), ease: 'none' })
+    });
+
+    // Stats
+    document.querySelectorAll('.stat-num').forEach(el => {
+      const target = parseInt(el.getAttribute('data-val'));
+      const counter = { val: 0 };
+      ScrollTrigger.create({
+        trigger: el, start: 'top 85%', once: true,
+        onEnter: () => {
+          gsap.to(counter, {
+            val: target, duration: 1.6, ease: 'power2.out',
+            onUpdate: () => el.innerHTML = Math.round(counter.val) + (target > 90 ? (target === 120 ? '+' : '%') : '')
+          });
+        }
+      });
+    });
+
+    // Testimonial & CTA
+    gsap.to('#test-quote', { opacity: 1, y: 0, duration: 1, scrollTrigger: { trigger: '#test-quote', start: 'top 80%' } });
+    gsap.to('#cta-box', { opacity: 1, scale: 1, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: '#cta-box', start: 'top 85%' } });
+  </script>
+</body>
+</html>
