@@ -20,3 +20,11 @@ KINETIC WEBSITE is a frontend web project created to practice and showcase web d
 - Clean and simple navigation
 
 ## 📂 Project Structure
+
+
+KINETIC-WEBSITE/
+│
+├── jeeth.html
+├── style.css
+├── script.js
+└── README.md
